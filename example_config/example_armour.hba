@@ -1,0 +1,43 @@
+# This file defines different armour types. The syntax is as follows:
+# 
+# NAME OF ARMOUR (must be unique)
+# 	piercing: NUMERIC REDUCTION VALUE
+# 	slashing: NUMERIC REDUCTION VALUE
+# 	bludgeoning: NUMERIC REDUCTION VALUE
+# 	toHitSpells: NUMERIC REDUCTION VALUE
+
+Leather
+	piercing: 1
+	slashing: 2
+	bludgeoning: 1
+	toHitSpells: 2
+
+Gambeson
+	piercing: 1
+	slashing: 2
+	bludgeoning: 2
+	toHitSpells: 2
+
+Chainmail
+	piercing: 2
+	slashing: 5
+	bludgeoning: 2
+	toHitSpells: 3
+
+Scalemail
+	piercing: 3
+	slashing: 4
+	bludgeoning: 3
+	toHitSpells: 4
+
+Platemail
+	piercing: 5
+	slashing: 6
+	bludgeoning: 4
+	toHitSpells: 5
+
+Mage Armour
+	piercing: 3
+	slashing: 3
+	bludgeoning: 3
+	toHitSpells: 3

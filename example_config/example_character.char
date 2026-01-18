@@ -1,0 +1,29 @@
+# This file contains the equipped armour for an example character.
+# Note that every character must have a unique name!
+
+name=Tav
+
+feet
+	Leather
+	Mage Armour
+
+legs
+	Scalemail
+	Mage Armour
+
+torso
+	Gambeson
+	Scalemail
+	Mage Armour
+
+arms
+	Gambeson
+	Scalemail
+	Mage Armour
+
+hands
+
+head
+	Platemail
+	Mage Armour
+
