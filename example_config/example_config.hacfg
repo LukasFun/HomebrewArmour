@@ -1,0 +1,10 @@
+# This file defines an example configuration.
+# 
+# The syntax for the configuration file is as follows:
+# To specify which armour definitions to use, write the following line:
+# armour=path/to/armour_file.hba
+# To include a character in the UI, write the following line:
+# character=path/to/character_file.char
+
+armour=./example_armour.hba
+character=./example_character.char
