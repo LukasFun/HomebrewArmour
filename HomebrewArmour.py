@@ -1,10 +1,10 @@
 # Lukas Freudenberg
 # 
-# 2025-11-01, ver.1.0
+# 2026-03-29, ver.1.1
 # 
 # HomebrewArmour includes and starts a GUI for managing the homebrew armour system for the campaign "Tyrannei der Drachen" run by Lukas Freudenberg.
 
-# Changelog
+# Changelog for the time before this went into the repository
 # 2025-11-01: Initial functional version
 # 2025-10-22: Started development
 
@@ -92,11 +92,6 @@ class HBA:
 		self.uiElements.append(self.controlFrame)
 		self.uiGridParams.append([1, 0, 1, 2, "NESW"])
 		self.controlFrame.columnconfigure(3, weight=1)
-		# Create button for loading armour definitions
-		self.loadButton = tk.Button(master=self.controlFrame, bg=self.bgc, text=u"\U0001F4C2", font=(self.font, self.cfsize))
-		self.uiElements.append(self.loadButton)
-		self.uiGridParams.append([0, 0, 1, 1, "NESW"])
-		self.loadButton.bind("<Button-1>", lambda event: self.loadArmourDefinitions(armour=None))
 		# Create button for loading a full configuration
 		self.loadConfigButton = tk.Button(master=self.controlFrame, bg=self.bgc, text=u"\U0001F4C2", font=(self.font, self.cfsize))
 		self.uiElements.append(self.loadConfigButton)
@@ -119,6 +114,9 @@ class HBA:
 		
 		# Array that holds the characters
 		self.characters = []
+		
+		# Array that holds the character frames
+		self.characterFrames = []
 		
 		# Create scrollable canvas
 		canvas = tk.Canvas(self.window, bg=self.bgc)
@@ -153,8 +151,8 @@ class HBA:
 		
 		# Display the widgets
 		L.buildUI(self.uiElements, self.uiGridParams)
-		# Maximize the window
-		self.window.attributes("-zoomed", True)
+		# Maximize the window - doesn't seem to work well
+		#self.window.attributes("-zoomed", True)
 		# Add event for closing the window
 		self.window.protocol("WM_DELETE_WINDOW", self.quit)
 		
@@ -322,6 +320,7 @@ class HBA:
 		# Maybe this is bad - there should be no need to rebuild the UI and this leads to difficulties when moving players around
 		self.uiElements.append(characterFrame)
 		self.uiGridParams.append([characterIndex, 0, 1, 1, "NESW"])
+		self.characterFrames.append(characterFrame)
 		characterFrame.grid(row=characterIndex, column=0, sticky="NESW")
 		# This needs to fit whatever I want to be the scalable UI-element. It definetely has to exist, if nothing else then for the character name
 		#characterFrame.columnconfigure(3, weight=1)
@@ -329,7 +328,7 @@ class HBA:
 		removeButton = tk.Button(master=characterFrame, text=u"\U00002716", bg=self.rbc, fg=self.rbtc, font=(self.font, self.rbfsize))
 		self.uiElements.append(removeButton)
 		self.uiGridParams.append([0, 0, 1, 1, "WE"])
-		removeButton.bind("<Button-1>", lambda event: self.removeCharacter(name, characterFrame))
+		removeButton.bind("<Button-1>", lambda event: self.removeCharacter(characterFrame))
 		removeButton.grid(row=0, column=0, sticky="NESW")
 		# If no name was given, generate one
 		if name == None:
@@ -416,7 +415,7 @@ class HBA:
 	
 	# Loads a character from a configuration file.
 	# 
-	# @param frame The frame of the character to load the configuration into.
+	# @param characterLabel the character label associated with the character.
 	# @param character The path to the character file. If no path is given, the user will be prompted for a file dialogue.
 	def loadCharacter(self, characterLabel, character=None, event=None):
 		# Check if a path was provided
@@ -497,6 +496,30 @@ class HBA:
 		
 		L.pln(characterName, " loaded.")
 	
+	# Removes a character.
+	# 
+	# @param name The name of the character as displayed on its label
+	# @param characterFrame the frame displaying everything associated with the character
+	def removeCharacter(self, characterFrame, event=None):
+		# Get character name
+		characterName = characterFrame.winfo_children()[1].cget("text")
+		# Calculate character index in global array
+		characterIndex = indexInList(self.characters, characterName)
+		# Remove character and attributes from internal list
+		self.characters.pop(characterIndex)
+		# Remove character frame from internal list
+		self.characterFrames.pop(characterIndex)
+		# Remove the frame and all its children
+		L.removeUI(characterFrame, [(self.uiElements, self.uiGridParams)])
+		# Move all subsequent character frames up by one row
+		for i in range(characterIndex, len(self.characters)):
+			# Get index of character frame in list of UI elements
+			uiIndex = indexInList(self.uiElements, self.characterFrames[i])
+			# Move frame up by 1 row
+			self.uiGridParams[uiIndex][0] = self.uiGridParams[uiIndex][0] - 1
+		# Rebuild the UI
+		L.buildUI(self.uiElements, self.uiGridParams)
+	
 	# Loads a configuration for the app from a file.
 	# 
 	# @param configfile The path to the configuration file. If no path is given, the user will be prompted for a file dialogue.
@@ -519,6 +542,9 @@ class HBA:
 				return
 		# Open the configuration file
 		configfile = open(configfile, "r")
+		# Remove all previous characters - this is done in reverse order so no frames have to be shifted
+		for i in range(len(self.characters) - 1, -1, -1):
+			self.removeCharacter(self.characterFrames[i])
 		# Load app configuration
 		for line in configfile.readlines():
 			# Ignore the line if it is a comment (first character being "#") or empty
@@ -529,10 +555,16 @@ class HBA:
 				# Load armour definitions file
 				self.loadArmourDefinitions(armour=line[7:-1])
 			elif len(line) > 10 and line[:10] == "character=":
+				# Get path for character file
+				character = line[10:-1]
+				# Check if character file exists - skip otherwise
+				if not os.path.exists(character):
+					L.pln("Character file: \"", character, "\" doesn't exist.")
+					continue
 				# Create character
 				charLabel = self.addCharacter()
 				# Load character configuration
-				self.loadCharacter(charLabel, line[10:-1])
+				self.loadCharacter(charLabel, character)
 			else:
 				# Invalid syntax, line will be skipped
 				L.pln(line[:-1], " has an invalid syntax and will not be processed.")
